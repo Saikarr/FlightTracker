@@ -15,7 +15,7 @@ public class SourceReading
 
     public SourceReading(/*CancellationToken token*/)
     {
-        Source = new NetworkSourceSimulator.NetworkSourceSimulator("example_data.ftr", 2, 5);
+        Source = new NetworkSourceSimulator.NetworkSourceSimulator("example_data.ftr", 1, 2);
         BinObjects = new List<IFactory>();
         Airports = new Dictionary<int, Airport>();
         Flights = new List<Flight>();
