@@ -2,6 +2,7 @@
 
 namespace Lab1;
 
+using System.Diagnostics;
 using Avalonia.Data;
 using DynamicData;
 using FlightTrackerGUI;
@@ -11,7 +12,6 @@ using NetworkSourceSimulator;
 public class Program
 {
     private List<IFactory> FTRObjects;
-    private CancellationTokenSource TokenSource;
     private SourceReading SourceReading;
     public static void Main()
     {
@@ -31,8 +31,6 @@ public class Program
     public Program()
     {
         FTRObjects = new List<IFactory>();
-        TokenSource = new CancellationTokenSource();
-        //var token = TokenSource.Token;
         SourceReading = new SourceReading();
     }
 
@@ -42,6 +40,10 @@ public class Program
         FlightsGUIData data = new FlightsGUIData();
         while (true)
         {
+            var t = Task.Run(async delegate
+            {
+                await Task.Delay(1000);
+            });
             Monitor.Enter(SourceReading.Flights);
             List<Flight> flights = SourceReading.Flights.ToList();
             Monitor.Exit(SourceReading.Flights);
@@ -52,34 +54,23 @@ public class Program
             }
             data.UpdateFlights(list);
             Runner.UpdateGUI(data);
-            Thread.Sleep(1000);
+            t.Wait();
         }
     }
 
     public void ModifyFlightGUIList(List<FlightGUI> list, Flight flight)
     {
-        (TimeOnly takeoff, TimeOnly landing) = flight.FromTakeLand(flight);
+        (TimeOnly takeoff, TimeOnly landing) = flight.FromTakeLand();
         bool sameday = true;
         if (takeoff > landing)
         {
             sameday = false;
         }
         TimeOnly cur = TimeOnly.FromDateTime(DateTime.Now);
-        if (sameday && cur > takeoff && cur < landing)
+        if ((sameday && cur > takeoff && cur < landing) || (!sameday && (cur > takeoff || cur < landing)))
         {
-            WorldPosition curpos = flight.CalcPos(flight, SourceReading.Airports, takeoff, landing, sameday);
-            double rotation = flight.CalcRot(flight, SourceReading.Airports);
-            list.Add(new FlightGUI
-            {
-                ID = flight.ID,
-                WorldPosition = curpos,
-                MapCoordRotation = rotation
-            });
-        }
-        else if (!sameday && (cur > takeoff || cur < landing))
-        {
-            WorldPosition curpos = flight.CalcPos(flight, SourceReading.Airports, takeoff, landing, sameday);
-            double rotation = flight.CalcRot(flight, SourceReading.Airports);
+            WorldPosition curpos = flight.CalcPos(SourceReading.Airports, takeoff, landing, sameday);
+            double rotation = flight.CalcRot(SourceReading.Airports);
             list.Add(new FlightGUI
             {
                 ID = flight.ID,
@@ -93,13 +84,11 @@ public class Program
     {
         SourceReading.MakeThread();
         Action action;
-        bool exit = false;
         Dictionary<string, Action> actions = new Dictionary<string, Action>
         {
             {"print", Print},
             {"exit", action = () => {
-            TokenSource.Cancel();
-            exit = true; }
+            return;}
             }
         };
         string? command;
@@ -116,7 +105,6 @@ public class Program
             {
                 Console.WriteLine("wrong command");
             }
-            if (exit) return;
         }
     }
 

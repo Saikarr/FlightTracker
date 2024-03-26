@@ -2,27 +2,40 @@
 using FlightTrackerGUI;
 using System.Text;
 using DynamicData;
+using System;
+
 namespace Lab1;
 
 public class SourceReading
 {
     public NetworkSourceSimulator.NetworkSourceSimulator Source;
     public List<IFactory> BinObjects;
-    //public CancellationToken Token { get; set; }
     public Dictionary<int, Airport> Airports;
     public List<Flight> Flights;
+    public static Dictionary<string, Action<Message>> AddObj;
 
 
-    public SourceReading(/*CancellationToken token*/)
+    public SourceReading()
     {
         Source = new NetworkSourceSimulator.NetworkSourceSimulator("example_data.ftr", 1, 2);
         BinObjects = new List<IFactory>();
         Airports = new Dictionary<int, Airport>();
         Flights = new List<Flight>();
-        //Token = token;
+        Action<Message> action;
+        AddObj = new Dictionary<string, Action<Message>>
+        {
+            {"NAI", action = message => { Airport airport = (Airport)FactoryDictionary.CreateFromBin(message.MessageBytes);
+                Airports.Add((int)airport.ID, airport); }},
+            {"NFL", action = message => { Flights.Add((Flight)FactoryDictionary.CreateFromBin(message.MessageBytes)); }},
+            {"NCR", action = message => { BinObjects.Add(FactoryDictionary.CreateFromBin(message.MessageBytes)); }},
+            {"NPA", action = message => { BinObjects.Add(FactoryDictionary.CreateFromBin(message.MessageBytes)); }},
+            {"NCA", action = message => { BinObjects.Add(FactoryDictionary.CreateFromBin(message.MessageBytes)); }},
+            {"NCP", action = message => { BinObjects.Add(FactoryDictionary.CreateFromBin(message.MessageBytes)); }},
+            {"NPP", action = message => { BinObjects.Add(FactoryDictionary.CreateFromBin(message.MessageBytes)); }}
+        };
     }
     public void MakeThread()
-    {  
+    {
         ThreadStart threadDelegate = new ThreadStart(ThreadWork);
         Thread newthread = new Thread(threadDelegate);
         newthread.IsBackground = true;
@@ -32,40 +45,19 @@ public class SourceReading
     public void ThreadWork()
     {
         Source.OnNewDataReady += MessageReached;
-        try
-        {
-            Source.Run();
-        }
-        catch (OperationCanceledException ex)
-        {
-            return;
-        }
+        Source.Run();
     }
     public void MessageReached(object sender, NewDataReadyArgs e)
     {
-        //Token.ThrowIfCancellationRequested();
         Message message = ((NetworkSourceSimulator.NetworkSourceSimulator)sender).GetMessageAt(e.MessageIndex);
         Creator(message);
     }
     public void Creator(Message message)
     {
         UTF8Encoding utf8 = new UTF8Encoding();
-        Monitor.Enter(Flights); 
-        switch (utf8.GetString(message.MessageBytes, 0, 3))
-        {
-            case "NAI":
-                Airport airport = (Airport)FactoryDictionary.CreateFromBin(message.MessageBytes);
-                Airports.Add((int)airport.ID, airport);
-                break;
-            case "NFL":
-                Flights.Add((Flight)FactoryDictionary.CreateFromBin(message.MessageBytes));
-                break;
-            default:
-                BinObjects.Add(FactoryDictionary.CreateFromBin(message.MessageBytes));
-                break;
-        }
+        Monitor.Enter(Flights);
+        AddObj[utf8.GetString(message.MessageBytes, 0, 3)](message);
         Monitor.Exit(Flights);
-
     }
 }
 
