@@ -24,9 +24,9 @@ public class SourceReading
         Action<Message> action;
         AddObj = new Dictionary<string, Action<Message>>
         {
-            {"NAI", action = message => { Airport airport = (Airport)FactoryDictionary.CreateFromBin(message.MessageBytes);
+            {"NAI", action = message => { Airport airport = AirportFactory.MakeBin(message.MessageBytes);
                 Airports.Add(airport.ID, airport); }},
-            {"NFL", action = message => { Flights.Add((Flight)FactoryDictionary.CreateFromBin(message.MessageBytes)); }},
+            {"NFL", action = message => { Flights.Add(FlightFactory.MakeBin(message.MessageBytes)); }},
             {"NCR", action = message => { BinObjects.Add(FactoryDictionary.CreateFromBin(message.MessageBytes)); }},
             {"NPA", action = message => { BinObjects.Add(FactoryDictionary.CreateFromBin(message.MessageBytes)); }},
             {"NCA", action = message => { BinObjects.Add(FactoryDictionary.CreateFromBin(message.MessageBytes)); }},

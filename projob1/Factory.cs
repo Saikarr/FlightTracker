@@ -212,6 +212,30 @@ public class AirportFactory : Factory
         string Country = utf8.GetString(args, CountryOffset, CountryLength);
         return new Airport(ID, Name, Code, Longitude, Latitude, ASML, Country);
     }
+    public static Airport MakeBin(byte[] args)
+    {
+        int IDOffset = 7;
+        int NLOffset = 15;
+        UInt16 NameLength = BitConverter.ToUInt16(args, NLOffset);
+        int NameOffset = 17;
+        int CodeLength = 3;
+        int CodeOffset = 17 + NameLength;
+        int LongitudeOffset = 20 + NameLength;
+        int LatittudeOffset = 24 + NameLength;
+        int AMSLOffset = 28 + NameLength;
+        int CountryOffset = 32 + NameLength;
+        int CountryLength = 3;
+
+        UTF8Encoding utf8 = new UTF8Encoding();
+        UInt64 ID = BitConverter.ToUInt64(args, IDOffset);
+        string Name = utf8.GetString(args, NameOffset, NameLength);
+        string Code = utf8.GetString(args, CodeOffset, CodeLength);
+        Single Longitude = BitConverter.ToSingle(args, LongitudeOffset);
+        Single Latitude = BitConverter.ToSingle(args, LatittudeOffset);
+        Single ASML = BitConverter.ToSingle(args, AMSLOffset);
+        string Country = utf8.GetString(args, CountryOffset, CountryLength);
+        return new Airport(ID, Name, Code, Longitude, Latitude, ASML, Country);
+    }
 }
 public class FlightFactory : Factory
 {
@@ -247,6 +271,40 @@ public class FlightFactory : Factory
         for (int i = 0; i<CrewCount; i++)
         {
             Crew[i] = BitConverter.ToUInt64(args, CrewOffset + i*8);
+        }
+        UInt64[] PassengerCargo = new UInt64[PassengerCargoCount];
+        for (int i = 0; i < PassengerCargoCount; i++)
+        {
+            PassengerCargo[i] = BitConverter.ToUInt64(args, PassengersCargoOffset + i * 8);
+        }
+        return new Flight(ID, Origin, Target, TakeoffTime, LandingTime, null, null, null, PlaneID, Crew, PassengerCargo);
+    }
+    public static Flight MakeBin(byte[] args)
+    {
+        int IDOffset = 7;
+        int OriginOffset = 15;
+        int TargetOffset = 23;
+        int TakeoffTimeOffset = 31;
+        int LandingTimeOffset = 39;
+        int PlaneIDOffset = 47;
+        int CCOffset = 55;
+        UInt16 CrewCount = BitConverter.ToUInt16(args, CCOffset);
+        int CrewOffset = 57;
+        int PCCOffset = 57 + 8 * CrewCount;
+        UInt16 PassengerCargoCount = BitConverter.ToUInt16(args, PCCOffset);
+        int PassengersCargoOffset = 59 + 8 * CrewCount;
+
+        UTF8Encoding utf8 = new UTF8Encoding();
+        UInt64 ID = BitConverter.ToUInt64(args, IDOffset);
+        UInt64 Origin = BitConverter.ToUInt64(args, OriginOffset);
+        UInt64 Target = BitConverter.ToUInt64(args, TargetOffset);
+        string TakeoffTime = (DateTime.UnixEpoch + TimeSpan.FromMilliseconds(BitConverter.ToUInt64(args, TakeoffTimeOffset))).ToString();
+        string LandingTime = (DateTime.UnixEpoch + TimeSpan.FromMilliseconds(BitConverter.ToUInt64(args, LandingTimeOffset))).ToString();
+        UInt64 PlaneID = BitConverter.ToUInt64(args, PlaneIDOffset);
+        UInt64[] Crew = new UInt64[CrewCount];
+        for (int i = 0; i < CrewCount; i++)
+        {
+            Crew[i] = BitConverter.ToUInt64(args, CrewOffset + i * 8);
         }
         UInt64[] PassengerCargo = new UInt64[PassengerCargoCount];
         for (int i = 0; i < PassengerCargoCount; i++)
