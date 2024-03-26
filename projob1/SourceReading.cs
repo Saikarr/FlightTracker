@@ -10,22 +10,22 @@ public class SourceReading
 {
     public NetworkSourceSimulator.NetworkSourceSimulator Source;
     public List<IFactory> BinObjects;
-    public Dictionary<int, Airport> Airports;
+    public Dictionary<ulong, Airport> Airports;
     public List<Flight> Flights;
-    public static Dictionary<string, Action<Message>> AddObj;
+    public Dictionary<string, Action<Message>> AddObj;
 
 
     public SourceReading()
     {
         Source = new NetworkSourceSimulator.NetworkSourceSimulator("example_data.ftr", 1, 2);
         BinObjects = new List<IFactory>();
-        Airports = new Dictionary<int, Airport>();
+        Airports = new Dictionary<ulong, Airport>();
         Flights = new List<Flight>();
         Action<Message> action;
         AddObj = new Dictionary<string, Action<Message>>
         {
             {"NAI", action = message => { Airport airport = (Airport)FactoryDictionary.CreateFromBin(message.MessageBytes);
-                Airports.Add((int)airport.ID, airport); }},
+                Airports.Add(airport.ID, airport); }},
             {"NFL", action = message => { Flights.Add((Flight)FactoryDictionary.CreateFromBin(message.MessageBytes)); }},
             {"NCR", action = message => { BinObjects.Add(FactoryDictionary.CreateFromBin(message.MessageBytes)); }},
             {"NPA", action = message => { BinObjects.Add(FactoryDictionary.CreateFromBin(message.MessageBytes)); }},

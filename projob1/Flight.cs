@@ -33,12 +33,12 @@ public class Flight : IFactory
         Load_as_IDs = load_as_IDs;
     }
 
-    public double CalcRot(Dictionary<int,Airport> airports)
+    public double CalcRot(Dictionary<ulong, Airport> airports)
     {
         (double lon, double lat) lonlatorigin = SphericalMercator.FromLonLat
-            (airports[(int)Origin_as_ID].Longitude, airports[(int)Origin_as_ID].Latitude);
+            (airports[Origin_as_ID].Longitude, airports[Origin_as_ID].Latitude);
         (double lon, double lat) lonlattarget = SphericalMercator.FromLonLat
-            (airports[(int)Target_as_ID].Longitude,airports[(int)Target_as_ID].Latitude);
+            (airports[Target_as_ID].Longitude,airports[Target_as_ID].Latitude);
         double rot = Math.Atan2(lonlattarget.lat - lonlatorigin.lat, lonlatorigin.lon - lonlattarget.lon);
 
         return rot - Math.PI / 2.0;
@@ -52,7 +52,7 @@ public class Flight : IFactory
         return (takeoff, landing);
     }
 
-    public WorldPosition CalcPos(Dictionary<int, Airport> airports, TimeOnly takeoff, TimeOnly landing, bool sameday)
+    public WorldPosition CalcPos(Dictionary<ulong, Airport> airports, TimeOnly takeoff, TimeOnly landing, bool sameday)
     {
         TimeOnly cur = TimeOnly.FromDateTime(DateTime.Now);
         TimeSpan flightlength;
@@ -65,10 +65,10 @@ public class Flight : IFactory
             flightlength = landing - takeoff + new TimeSpan(24,0,0);
         }
         TimeSpan curflight = cur - takeoff;
-        (float lat, float lon) distance = (airports[(int)Target_as_ID].Latitude - airports[(int)Origin_as_ID].Latitude, 
-            airports[(int)Target_as_ID].Longitude - airports[(int)Origin_as_ID].Longitude);
+        (float lat, float lon) distance = (airports[Target_as_ID].Latitude - airports[Origin_as_ID].Latitude, 
+            airports[Target_as_ID].Longitude - airports[Origin_as_ID].Longitude);
 
-        return new WorldPosition(airports[(int)Origin_as_ID].Latitude + (curflight / flightlength) * distance.lat, 
-            airports[(int)Origin_as_ID].Longitude + (curflight / flightlength) * distance.lon);
+        return new WorldPosition(airports[Origin_as_ID].Latitude + (curflight / flightlength) * distance.lat, 
+            airports[Origin_as_ID].Longitude + (curflight / flightlength) * distance.lon);
     }
 }
