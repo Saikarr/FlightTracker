@@ -16,16 +16,7 @@ public class Program
     public static void Main()
     {
         var program = new Program();
-        program.Pom();
-    }
-
-    public void Pom()
-    {
-        ThreadStart threadDelegate = new ThreadStart(CreateMap);
-        Thread newthread = new Thread(threadDelegate);
-        newthread.IsBackground = true;
-        newthread.Start();
-        Runner.Run();
+        program.StartMap();
     }
 
     public Program()
@@ -33,8 +24,16 @@ public class Program
         FTRObjects = new List<IFactory>();
         SourceReading = new SourceReading();
     }
+    public void StartMap()
+    {
+        ThreadStart threadDelegate = new ThreadStart(UpdateMap);
+        Thread newthread = new Thread(threadDelegate);
+        newthread.IsBackground = true;
+        newthread.Start();
+        Runner.Run();
+    }
 
-    public void CreateMap()
+    public void UpdateMap()
     {
         SourceReading.MakeThread();
         FlightsGUIData data = new FlightsGUIData();
