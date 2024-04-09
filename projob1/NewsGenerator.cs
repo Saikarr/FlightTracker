@@ -8,32 +8,32 @@ using Avalonia.Input;
 namespace Lab1;
 public class NewsGenerator
 {
-    private List<Media> medias;
-    private List<IReportable> reportables;
+    private List<Media> Medias;
+    private List<IReportable> Reportables;
 
     private int MediasIter = 0;
     private int ReportablesIter = 0;
 
     public NewsGenerator(List<Media> medias, List<IReportable> reportables)
     {
-        this.medias = medias;
-        this.reportables = reportables;
+        this.Medias = medias;
+        this.Reportables = reportables;
     }
 
     public string GenerateNextNews()
     {
-        string news = reportables[ReportablesIter].Accept(medias[MediasIter]);
+        if (ReportablesIter == Reportables.Count)
+        {
+            ReportablesIter = 0;
+            MediasIter = 0;
+            return null;
+        }
+        string news = Reportables[ReportablesIter].Accept(Medias[MediasIter]);
         MediasIter++;
-        if (MediasIter == medias.Count)
+        if (MediasIter == Medias.Count)
         {
             MediasIter = 0;
             ReportablesIter++;
-            if (ReportablesIter == reportables.Count)
-            {
-                ReportablesIter = 0;
-                MediasIter = 0;
-                return null;
-            }
         }
         return news;
     }
@@ -41,7 +41,7 @@ public class NewsGenerator
     public void PrintAll()
     {
         string news = GenerateNextNews();
-        while(news!= null)
+        while (news != null)
         {
             Console.WriteLine(news);
             news = GenerateNextNews();

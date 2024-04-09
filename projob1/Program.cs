@@ -25,7 +25,6 @@ public class Program
     {
         var program = new Program();
         program.LoadObjects();
-
         program.WaitForInput();
     }
 
@@ -34,15 +33,6 @@ public class Program
         FTRObjects = new List<IFactory>();
         SourceReading = new SourceReading();
     }
-    public void StartMap()
-    {
-        ThreadStart threadDelegate = new ThreadStart(UpdateMap);
-        Thread newthread = new Thread(threadDelegate);
-        newthread.IsBackground = true;
-        newthread.Start();
-        Runner.Run();
-    }
-
     public void Report()
     {
         var tv1 = new Television("Telewizja Abelowa");
@@ -57,6 +47,14 @@ public class Program
         reps.AddRange(CargoPlanes);
         var news = new NewsGenerator(medias, reps);
         news.PrintAll();
+    }
+    public void StartMap()
+    {
+        ThreadStart threadDelegate = new ThreadStart(UpdateMap);
+        Thread newthread = new Thread(threadDelegate);
+        newthread.IsBackground = true;
+        newthread.Start();
+        Runner.Run();
     }
     public void UpdateMap()
     {
@@ -107,13 +105,14 @@ public class Program
     public void WaitForInput()
     {
         //SourceReading.MakeThread();
+        bool exit = false;
         Action action;
         Dictionary<string, Action> actions = new Dictionary<string, Action>
         {
             //{"print", Print},
             {"report", Report},
             {"exit", action = () => {
-            return;}
+            exit = true;}
             }
         };
         string? command;
@@ -130,6 +129,7 @@ public class Program
             {
                 Console.WriteLine("wrong command");
             }
+            if (exit) return;
         }
     }
 
