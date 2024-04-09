@@ -1,6 +1,6 @@
 ﻿
 namespace Lab1;
-public class Plane : IFactory
+public abstract class Plane : IFactory, IReportable
 {
     public UInt64 ID { get; private set; }
     public string Serial { get; private set; }
@@ -13,6 +13,7 @@ public class Plane : IFactory
         Country = country;
         Model = model;
     }
+    public abstract string Accept(IVisitor visitor);
 }
 public class CargoPlane : Plane
 {
@@ -21,6 +22,11 @@ public class CargoPlane : Plane
         : base(iD, serial, country, model)
     {
         MaxLoad = maxLoad;
+    }
+
+    public override string Accept(IVisitor visitor)
+    {
+        return visitor.VisitCargoPlane(this);
     }
 }
 
@@ -36,6 +42,11 @@ public class PassengerPlane : Plane
         FirstClassSize = firstClassSize;
         BusinessClassSize = businessClassSize;
         EconomyClassSize = economyClassSize;
+    }
+
+    public override string Accept(IVisitor visitor)
+    {
+        return visitor.VisitPassengerPlane(this);
     }
 }
 

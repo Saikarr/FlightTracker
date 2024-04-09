@@ -8,15 +8,25 @@ using DynamicData;
 using FlightTrackerGUI;
 using Mapsui.Projections;
 using NetworkSourceSimulator;
+using static Mapsui.Nts.Providers.Shapefile.Indexing.QuadTree;
 
 public class Program
 {
     private List<IFactory> FTRObjects;
+    private List<Airport> Airports = new();
+    private List<CargoPlane> CargoPlanes = new();
+    private List<PassengerPlane> PassengerPlanes = new();
+    private List<Cargo> Cargos = new();
+    private List<Crew> Crews = new();
+    private List<Passenger> Passenger = new();
+    private List<Flight> Flights = new();
     private SourceReading SourceReading;
     public static void Main()
     {
         var program = new Program();
-        program.StartMap();
+        program.LoadObjects();
+
+        program.WaitForInput();
     }
 
     public Program()
@@ -33,6 +43,21 @@ public class Program
         Runner.Run();
     }
 
+    public void Report()
+    {
+        var tv1 = new Television("Telewizja Abelowa");
+        var tv2 = new Television("Kanał TV-tensor");
+        var radio1 = new Radio("Radio Kwantyfikator");
+        var radio2 = new Radio("Radio Shmem");
+        var paper1 = new Newspaper("Gazeta Kategoryczna");
+        var paper2 = new Newspaper("Dziennik Politechniczny");
+        List<Media> medias = new List<Media>() { tv1, tv2, radio1, radio2, paper1, paper2 };
+        List<IReportable> reps = [.. Airports];
+        reps.AddRange(PassengerPlanes);
+        reps.AddRange(CargoPlanes);
+        var news = new NewsGenerator(medias, reps);
+        news.PrintAll();
+    }
     public void UpdateMap()
     {
         SourceReading.MakeThread();
@@ -81,11 +106,12 @@ public class Program
 
     public void WaitForInput()
     {
-        SourceReading.MakeThread();
+        //SourceReading.MakeThread();
         Action action;
         Dictionary<string, Action> actions = new Dictionary<string, Action>
         {
-            {"print", Print},
+            //{"print", Print},
+            {"report", Report},
             {"exit", action = () => {
             return;}
             }
@@ -94,7 +120,7 @@ public class Program
 
         while (true)
         {
-            Console.WriteLine("print or exit?");
+            Console.WriteLine("report or exit?");
             command = Console.ReadLine();
             try
             {
@@ -123,6 +149,17 @@ public class Program
     }
     public void LoadObjects()
     {
+        Action<string, string[]> action;
+        var AddObj = new Dictionary<string, Action<string, string[]>>
+        {
+            {"C", action = (type, args)=> Crews.Add((Crew)FactoryDictionary.CreateFromFTR(type, args)) },
+            {"P", action = (type, args)=> Passenger.Add((Passenger)FactoryDictionary.CreateFromFTR(type, args)) },
+            {"CA", action = (type, args)=> Cargos.Add((Cargo)FactoryDictionary.CreateFromFTR(type, args)) },
+            {"CP", action = (type, args)=> CargoPlanes.Add((CargoPlane)FactoryDictionary.CreateFromFTR(type, args)) },
+            {"PP", action =(type, args) => PassengerPlanes.Add((PassengerPlane) FactoryDictionary.CreateFromFTR(type, args)) },
+            {"AI", action =(type, args) => Airports.Add((Airport) FactoryDictionary.CreateFromFTR(type, args)) },
+            {"FL", action =(type, args) => Flights.Add((Flight) FactoryDictionary.CreateFromFTR(type, args)) }
+        };
         string path = "example_data.ftr";
         using StreamReader sr = new StreamReader(path);
         string? s;
@@ -131,7 +168,8 @@ public class Program
             string[] tab = s.Split(',');
             string type = tab[0];
             string[] args = tab.Skip(1).ToArray();
-            FTRObjects.Add(FactoryDictionary.CreateFromFTR(type, args));
+            AddObj[type](type, args);
+            //FTRObjects.Add(FactoryDictionary.CreateFromFTR(type, args));
         }
     }
     public void Serialize()

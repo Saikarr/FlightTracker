@@ -1,6 +1,6 @@
 ﻿
 namespace Lab1;
-public class Airport : IFactory
+public class Airport : IFactory, IReportable
 {
     public UInt64 ID { get; private set; }
     public string Name { get; private set; }
@@ -19,6 +19,10 @@ public class Airport : IFactory
         Latitude = latitude;
         AMSL = aMSL;
         Country = country;
+    }
+    public string Accept(IVisitor visitor)
+    {
+        return visitor.VisitAirport(this);
     }
 }
 
