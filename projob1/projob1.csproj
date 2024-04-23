@@ -16,7 +16,7 @@
       <HintPath>..\..\..\..\..\prog\nuget_projob\net8.0\FlightTrackerGUI.dll</HintPath>
     </Reference>
     <Reference Include="NetworkSourceSimulator">
-      <HintPath>NetworkSourceSimulator.dll</HintPath>
+      <HintPath>..\..\..\..\..\Downloads\NetworkSourceSimulator.dll</HintPath>
     </Reference>
   </ItemGroup>
 
