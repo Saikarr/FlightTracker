@@ -1,4 +1,6 @@
 ﻿
+using NetworkSourceSimulator;
+
 namespace Lab1;
 public abstract class Plane : IFactory, IReportable
 {
@@ -28,6 +30,20 @@ public class CargoPlane : Plane
     {
         return visitor.VisitCargoPlane(this);
     }
+    public void Update(Dictionary<ulong, Flight> flights, IDUpdateArgs e, Dictionary<ulong, CargoPlane> cargoPlanes)
+    {
+        ID = e.NewObjectID;
+        var pom = this;
+        cargoPlanes.Remove(e.ObjectID);
+        cargoPlanes.Add(e.NewObjectID, pom);
+        lock (flights)
+        {
+            foreach (var item in flights.Values)
+            {
+                if (item.Plane_ID == e.ObjectID) item.Plane_ID = e.NewObjectID;
+            }
+        }
+    }
 }
 
 public class PassengerPlane : Plane
@@ -47,6 +63,20 @@ public class PassengerPlane : Plane
     public override string Accept(IVisitor visitor)
     {
         return visitor.VisitPassengerPlane(this);
+    }
+    public void Update(Dictionary<ulong, Flight> flights, IDUpdateArgs e, Dictionary<ulong, PassengerPlane> passengerPlanes)
+    {
+        ID = e.NewObjectID;
+        var pom = this;
+        passengerPlanes.Remove(e.ObjectID);
+        passengerPlanes.Add(e.NewObjectID, pom);
+        lock (flights)
+        {
+            foreach (var item in flights.Values)
+            {
+                if (item.Plane_ID == e.ObjectID) item.Plane_ID = e.NewObjectID;
+            }
+        }
     }
 }
 

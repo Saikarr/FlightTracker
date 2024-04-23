@@ -62,6 +62,7 @@ public class SourceReading
             program.LogWriter.WriteLine($"Position update: ID:{e.ObjectID}, old ASML:{program.Flights[e.ObjectID].AMSL}," +
                 $" old Longitude: {program.Flights[e.ObjectID].Longitude}, old Latitude:{program.Flights[e.ObjectID].Latitude}," +
                 $"  new ASML: {e.AMSL}, new Longitude: {e.Longitude}, new Latitude: {e.Latitude}");
+
             lock (program.Flights)
             {
                 program.Flights[e.ObjectID].AMSL = e.AMSL;
@@ -75,7 +76,6 @@ public class SourceReading
     }
     public void ContactUpdate(object sender, ContactInfoUpdateArgs e)
     {
-        bool success = false;
         if (program.Crews.ContainsKey(e.ObjectID))
         {
             program.LogWriter.WriteLine($"Contact update: ID:{e.ObjectID}, old email:{program.Crews[e.ObjectID].Email}," +
@@ -85,8 +85,8 @@ public class SourceReading
         }
         else if (program.Passenger.ContainsKey(e.ObjectID))
         {
-            program.LogWriter.WriteLine($"Contact update: ID:{e.ObjectID}, old email:{program.Crews[e.ObjectID].Email}," +
-                $" old phone: {program.Crews[e.ObjectID].Phone}, new email: {e.EmailAddress}, new phone: {e.PhoneNumber}");
+            program.LogWriter.WriteLine($"Contact update: ID:{e.ObjectID}, old email:{program.Passenger[e.ObjectID].Email}," +
+                $" old phone: {program.Passenger[e.ObjectID].Phone}, new email: {e.EmailAddress}, new phone: {e.PhoneNumber}");
             program.Passenger[e.ObjectID].Phone = e.PhoneNumber;
             program.Passenger[e.ObjectID].Email = e.EmailAddress;
         }
@@ -107,109 +107,45 @@ public class SourceReading
         {
             if (program.Airports.ContainsKey(e.ObjectID))
             {
-
-                program.Airports[e.ObjectID].ID = e.NewObjectID;
-                var pom = program.Airports[e.ObjectID];
-                program.Airports.Remove(e.ObjectID);
-                program.Airports.Add(e.NewObjectID, pom);
-                lock (program.Flights)
-                {
-                    foreach (var item in program.Flights.Values)
-                    {
-                        if (item.Target_as_ID == e.ObjectID) item.Target_as_ID = e.NewObjectID;
-                        if (item.Origin_as_ID == e.ObjectID) item.Origin_as_ID = e.NewObjectID;
-                    }
-                }
-
+                program.Airports[e.ObjectID].Update(program.Flights, e, program.Airports);
             }
             else if (program.Cargos.ContainsKey(e.ObjectID))
             {
-                program.Cargos[e.ObjectID].ID = e.NewObjectID;
-                var pom = program.Cargos[e.ObjectID];
-                program.Cargos.Remove(e.ObjectID);
-                program.Cargos.Add(e.NewObjectID, pom);
-                lock (program.Flights)
-                {
-                    foreach (var item in program.Flights.Values)
-                    {
-                        for (int i = 0; i < item.Load_as_IDs.Length; i++)
-                        {
-                            if (item.Load_as_IDs[i] == e.ObjectID) item.Load_as_IDs[i] = e.NewObjectID;
-                        }
-                    }
-                    //foreach(var item2 in item.Load_as_IDs)
-                    //{
-                    //    if (item2 == e.ObjectID) item2 = e.NewObjectID;
-                    //}
-                }
+                program.Cargos[e.ObjectID].Update(program.Flights, e, program.Cargos);
             }
             else if (program.Flights.ContainsKey(e.ObjectID))
             {
-                lock (program.Flights)
-                {
-                    program.Flights[e.ObjectID].ID = e.NewObjectID;
-                    var pom = program.Flights[e.ObjectID];
-                    program.Flights.Remove(e.ObjectID);
-                    program.Flights.Add(e.NewObjectID, pom);
-                }
+                program.Flights[e.ObjectID].Update(program.Flights, e);
             }
             else if (program.Passenger.ContainsKey(e.ObjectID))
             {
-                program.Passenger[e.ObjectID].ID = e.NewObjectID;
-                var pom = program.Passenger[e.ObjectID];
-                program.Passenger.Remove(e.ObjectID);
-                program.Passenger.Add(e.NewObjectID, pom);
+                program.Passenger[e.ObjectID].Update(e, program.Passenger);
             }
             else if (program.Crews.ContainsKey(e.ObjectID))
             {
-                program.Crews[e.ObjectID].ID = e.NewObjectID;
-                var pom = program.Crews[e.ObjectID];
-                program.Crews.Remove(e.ObjectID);
-                program.Crews.Add(e.NewObjectID, pom);
-                lock (program.Flights)
-                {
-                    foreach (var item in program.Flights.Values)
-                    {
-                        for (int i = 0; i < item.Crew_as_IDs.Length; i++)
-                        {
-                            if (item.Crew_as_IDs[i] == e.ObjectID) item.Crew_as_IDs[i] = e.NewObjectID;
-                        }
-                    }
-                }
+                program.Crews[e.ObjectID].Update(program.Flights, e, program.Crews);
             }
             else if (program.PassengerPlanes.ContainsKey(e.ObjectID))
             {
-                program.PassengerPlanes[e.ObjectID].ID = e.NewObjectID;
-                var pom = program.PassengerPlanes[e.ObjectID];
-                program.PassengerPlanes.Remove(e.ObjectID);
-                program.PassengerPlanes.Add(e.NewObjectID, pom);
-                lock (program.Flights)
-                {
-                    foreach (var item in program.Flights.Values)
-                    {
-                        if (item.Plane_ID == e.ObjectID) item.Plane_ID = e.NewObjectID;
-                    }
-                }
+                program.PassengerPlanes[e.ObjectID].Update(program.Flights, e, program.PassengerPlanes);
             }
             else if (program.CargoPlanes.ContainsKey(e.ObjectID))
             {
-                program.CargoPlanes[e.ObjectID].ID = e.NewObjectID;
-                var pom = program.CargoPlanes[e.ObjectID];
-                program.CargoPlanes.Remove(e.ObjectID);
-                program.CargoPlanes.Add(e.NewObjectID, pom);
-                lock (program.Flights)
-                {
-                    foreach (var item in program.Flights.Values)
-                    {
-                        if (item.Plane_ID == e.ObjectID) item.Plane_ID = e.NewObjectID;
-                    }
-                }
+                program.CargoPlanes[e.ObjectID].Update(program.Flights, e, program.CargoPlanes);
             }
-            else { program.LogWriter.WriteLine($"Failed ID update: ID:{e.ObjectID}, nonexistent"); error = true; }
+            else
+            {
+                program.LogWriter.WriteLine($"Failed ID update: ID:{e.ObjectID}, nonexistent");
+                error = true;
+            }
         }
-        else { program.LogWriter.WriteLine($"Failed ID update: old ID:{e.ObjectID}, new ID: {e.NewObjectID}, repetition"); return; }
-        if (!error) program.LogWriter.WriteLine($"ID update: old ID:{e.ObjectID}, new ID: {e.NewObjectID}");
+        else
+        {
+            program.LogWriter.WriteLine($"Failed ID update: old ID:{e.ObjectID}, new ID: {e.NewObjectID}, repetition");
+            return;
+        }
 
+        if (!error) program.LogWriter.WriteLine($"ID update: old ID:{e.ObjectID}, new ID: {e.NewObjectID}");
     }
     public void MessageReached(object sender, NewDataReadyArgs e)
     {

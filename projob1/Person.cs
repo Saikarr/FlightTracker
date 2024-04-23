@@ -1,6 +1,7 @@
 ﻿
 using System.Numerics;
 using System.Xml.Linq;
+using NetworkSourceSimulator;
 
 namespace Lab1;
 
@@ -31,6 +32,23 @@ public class Crew : Person
         Practice = practice;
         Role = role;
     }
+    public void Update(Dictionary<ulong, Flight> flights, IDUpdateArgs e, Dictionary<ulong, Crew> crews)
+    {
+        ID = e.NewObjectID;
+        var pom = this;
+        crews.Remove(e.ObjectID);
+        crews.Add(e.NewObjectID, pom);
+        lock (flights)
+        {
+            foreach (var item in flights.Values)
+            {
+                for (int i = 0; i < item.Crew_as_IDs.Length; i++)
+                {
+                    if (item.Crew_as_IDs[i] == e.ObjectID) item.Crew_as_IDs[i] = e.NewObjectID;
+                }
+            }
+        }
+    }
 }
 
 public class Passenger : Person
@@ -42,5 +60,12 @@ public class Passenger : Person
     {
         Class = @class;
         Miles = miles;
+    }
+    public void Update(IDUpdateArgs e, Dictionary<ulong, Passenger> passenger)
+    {
+        ID = e.NewObjectID;
+        var pom = passenger[e.ObjectID];
+        passenger.Remove(e.ObjectID);
+        passenger.Add(e.NewObjectID, pom);
     }
 }

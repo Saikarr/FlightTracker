@@ -1,4 +1,6 @@
 ﻿
+using NetworkSourceSimulator;
+
 namespace Lab1;
 public class Airport : IFactory, IReportable
 {
@@ -23,6 +25,25 @@ public class Airport : IFactory, IReportable
     public string Accept(IVisitor visitor)
     {
         return visitor.VisitAirport(this);
+    }
+
+    public void Update(Dictionary<ulong,Flight> flights, IDUpdateArgs e, Dictionary<ulong,Airport> airports)
+    {
+        lock (airports)
+        {
+            ID = e.NewObjectID;
+            var pom = this;
+            airports.Remove(e.ObjectID);
+            airports.Add(e.NewObjectID, pom);
+            lock (flights)
+            {
+                foreach (var item in flights.Values)
+                {
+                    if (item.Target_as_ID == e.ObjectID) item.Target_as_ID = e.NewObjectID;
+                    if (item.Origin_as_ID == e.ObjectID) item.Origin_as_ID = e.NewObjectID;
+                }
+            }
+        }
     }
 }
 

@@ -1,6 +1,7 @@
 ﻿
 using Avalonia.Data;
 using Mapsui.Projections;
+using NetworkSourceSimulator;
 
 namespace Lab1;
 
@@ -95,6 +96,16 @@ public class Flight : IFactory
             Longitude = (float?)(Longitude + (curflight / flightlength) * distance.lon);
             LastTime = cur;
             return new WorldPosition((double)Latitude, (double)Longitude);
+        }
+    }
+    public void Update(Dictionary<ulong, Flight> flights, IDUpdateArgs e)
+    {
+        lock (flights)
+        {
+            flights[e.ObjectID].ID = e.NewObjectID;
+            var pom = flights[e.ObjectID];
+            flights.Remove(e.ObjectID);
+            flights.Add(e.NewObjectID, pom);
         }
     }
 }

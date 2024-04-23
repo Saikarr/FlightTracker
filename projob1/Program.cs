@@ -14,13 +14,6 @@ using System;
 public class Program
 {
     private List<IFactory> FTRObjects;
-    //private List<Airport> Airports = new();
-    //private List<CargoPlane> CargoPlanes = new();
-    //private List<PassengerPlane> PassengerPlanes = new();
-    //private List<Cargo> Cargos = new();
-    //private List<Crew> Crews = new();
-    //private List<Passenger> Passenger = new();
-    //private List<Flight> Flights = new();
     public Dictionary<ulong, Airport> Airports = new();
     public Dictionary<ulong, CargoPlane> CargoPlanes = new();
     public Dictionary<ulong, PassengerPlane> PassengerPlanes = new();
@@ -28,7 +21,6 @@ public class Program
     public Dictionary<ulong, Crew> Crews = new();
     public Dictionary<ulong, Passenger> Passenger = new();
     public Dictionary<ulong, Flight> Flights = new();
-    public Dictionary<ulong, Airport> AirDict = new();
     private SourceReading SourceReading;
     public StreamWriter LogWriter;
     public static void Main()
@@ -36,8 +28,7 @@ public class Program
         var program = new Program();
         program.LoadObjects();
         program.StartMap();
-        
-        //program.WaitForInput();
+        program.LogWriter.Close();
     }
 
     public Program()
@@ -84,9 +75,6 @@ public class Program
             {
                 await Task.Delay(1000);
             });
-            //Monitor.Enter(SourceReading.Flights);
-            //List<Flight> flights = SourceReading.Flights.ToList();
-            //Monitor.Exit(SourceReading.Flights);
             List<FlightGUI> list = new List<FlightGUI>();
             lock (Flights)
             {
@@ -112,8 +100,13 @@ public class Program
         TimeOnly cur = TimeOnly.FromDateTime(DateTime.Now);
         if ((sameday && cur > takeoff && cur < landing) || (!sameday && (cur > takeoff || cur < landing)))
         {
-            WorldPosition curpos = flight.CalcPos(AirDict, takeoff, landing, sameday);
-            double rotation = flight.CalcRot(AirDict);
+            WorldPosition curpos;
+            double rotation;
+            lock (Airports)
+            {
+                curpos = flight.CalcPos(Airports, takeoff, landing, sameday);
+                rotation = flight.CalcRot(Airports);
+            }
             list.Add(new FlightGUI
             {
                 ID = flight.ID,
@@ -150,7 +143,8 @@ public class Program
             {
                 Console.WriteLine("wrong command");
             }
-            if (exit) return;
+            if (exit) { return; }
+            
         }
     }
 
@@ -178,8 +172,7 @@ public class Program
             {"CA", action = (type, args)=> Cargos.Add(UInt64.Parse(args[0]), (Cargo)FactoryDictionary.CreateFromFTR(type, args)) },
             {"CP", action = (type, args)=> CargoPlanes.Add(UInt64.Parse(args[0]), (CargoPlane)FactoryDictionary.CreateFromFTR(type, args)) },
             {"PP", action =(type, args) => PassengerPlanes.Add(UInt64.Parse(args[0]), (PassengerPlane) FactoryDictionary.CreateFromFTR(type, args)) },
-            {"AI", action =(type, args) => {Airports.Add(UInt64.Parse(args[0]), (Airport) FactoryDictionary.CreateFromFTR(type, args));
-            AirDict.Add(UInt64.Parse(args[0]), (Airport) FactoryDictionary.CreateFromFTR(type, args));} },
+            {"AI", action =(type, args) => Airports.Add(UInt64.Parse(args[0]), (Airport) FactoryDictionary.CreateFromFTR(type, args)) },
             {"FL", action =(type, args) => Flights.Add(UInt64.Parse(args[0]), (Flight) FactoryDictionary.CreateFromFTR(type, args)) }
         };
         string path = "example_data.ftr";
