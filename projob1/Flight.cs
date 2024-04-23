@@ -102,8 +102,8 @@ public class Flight : IFactory
     {
         lock (flights)
         {
-            flights[e.ObjectID].ID = e.NewObjectID;
-            var pom = flights[e.ObjectID];
+            ID = e.NewObjectID;
+            var pom = this;
             flights.Remove(e.ObjectID);
             flights.Add(e.NewObjectID, pom);
         }

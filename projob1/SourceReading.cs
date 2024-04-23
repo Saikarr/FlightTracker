@@ -68,7 +68,6 @@ public class SourceReading
                 program.Flights[e.ObjectID].AMSL = e.AMSL;
                 program.Flights[e.ObjectID].Latitude = e.Latitude;
                 program.Flights[e.ObjectID].Longitude = e.Longitude;
-                program.Flights[e.ObjectID].LastTime = TimeOnly.FromDateTime(DateTime.Now);
             }
         }
         else program.LogWriter.WriteLine($"Failed position update: ID:{e.ObjectID}, nonexistent");
